@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Card from "./components/card/Card";
 import Input from "./components/input/Input";
 import TodoItem from "./components/todo-item/TodoItem";
 import TextArea from "./components/input/TextArea";
 import Button from "./components/button/Button";
 import "./App.css";
+import Modal from "./components/modal/Modal";
 
 const TODOS_MOCK = [
   {
@@ -35,8 +36,87 @@ const TODOS_MOCK = [
 ];
 
 function App() {
+  const [todoList, setTodoList] = useState(TODOS_MOCK);
+  const [isOpen, setIsOpen] = useState(false);
+  const [todoId, setTodoId] = useState(null);
+  const formEl = useRef(null);
 
-  const [todoList, setTodoList] = useState("")
+  const handleUpsertTodo = (e) => {
+    e.preventDefault();
+
+    setTodoList((prevValue) =>
+      todoId
+        ? prevValue.map((todo) =>
+            todo.id === todoId
+              ? {
+                  ...todo,
+                  title: e.target.elements.title.value,
+                  description: e.target.elements.description.value,
+                }
+              : todo
+          )
+        : [
+            ...prevValue,
+            {
+              id: `${todoList.length + 1}`,
+              title: e.target.elements.title.value,
+              description: e.target.elements.description.value,
+              completed: false,
+            },
+          ]
+    );
+    setIsOpen(false);
+    e.target.reset();
+  };
+
+  const handleOnCompleted = (id, value) => {
+    setTodoList((prevValue) =>
+      prevValue.map((todo) =>
+        todo.id === id ? { ...todo, completed: value } : todo
+      )
+    );
+  };
+
+  const handleOnEdit = (id) => {
+    const toDo = todoList.find((todo) => todo.id === id);
+    if (toDo) {
+      formEl.current.elements.title.value = toDo.title;
+      formEl.current.elements.description.value = toDo.description;
+      setTodoId(toDo.id);
+      setIsOpen(true);
+    }
+  };
+
+  const handleOnClose = () => {
+    formEl.current.elements.title.value = "";
+    formEl.current.elements.description.value = "";
+    setTodoId(null);
+    setIsOpen(false);
+  };
+
+  const handleOnDelete = (id) => {
+    setTodoList((prevValue) => prevValue.filter((todo) => todo.id !== id));
+  };
+
+  const handleOpenAddModal = () => {
+    setTodoId(null);
+    setIsOpen(true);
+  };
+
+  const modalModeLabel = todoId ? "Edit" : "Create";
+
+  const displayItem = (todo) => (
+    <TodoItem
+      onEdit={handleOnEdit}
+      onDelete={handleOnDelete}
+      onCompleted={handleOnCompleted}
+      id={todo.id}
+      key={todo.id}
+      title={todo.title}
+      description={todo.description}
+      completed={todo.completed}
+    />
+  );
 
   return (
     <div className="App">
@@ -44,32 +124,31 @@ function App() {
         {/* 
             This is your Create Card component.
           */}
-        <Card>
-          <h2>Create Todo</h2>
-          <form>
-            <Input onChange={() => {}} placeholder="Title" type="text" />
-            <TextArea onChange={() => {}} placeholder="Description" />
-            <Button type="submit">Create</Button>
+        <Modal isOpen={isOpen} onClose={handleOnClose}>
+          <h2>{modalModeLabel}Todo</h2>
+          <form ref={formEl} onSubmit={handleUpsertTodo}>
+            <Input name="title" placeholder="Title" type="text" required />
+            <TextArea name="description" placeholder="Description" required />
+            <Button type="submit">{modalModeLabel}</Button>
           </form>
-        </Card>
+        </Modal>
 
         {/* 
           My Todos
         */}
         <Card>
           <h1>My todos</h1>
-          <Button onClick={() => console.log("Open Modal")}>Add +</Button>
+          <Button onClick={handleOpenAddModal}>Add +</Button>
           <div className="list-container">
-            <TodoItem completed={false} />
-            <TodoItem completed={false} />
+            {/* <TodoItem completed={false} /> */}
+            {todoList.filter((todo) => !todo.completed).map(displayItem)}
           </div>
 
           <div className="separator"></div>
 
           <h2>Completed</h2>
           <div className="list-container">
-            <TodoItem completed={true} />
-            <TodoItem completed={true} />
+            {todoList.filter((todo) => todo.completed).map(displayItem)}
           </div>
         </Card>
       </div>
