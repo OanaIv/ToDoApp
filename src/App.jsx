@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Card from "./components/card/Card";
 import Input from "./components/input/Input";
 import TodoItem from "./components/todo-item/TodoItem";
@@ -35,6 +35,9 @@ const TODOS_MOCK = [
 ];
 
 function App() {
+
+  const [todoList, setTodoList] = useState("")
+
   return (
     <div className="App">
       <div className="app-container">
