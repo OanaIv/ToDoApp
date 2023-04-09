@@ -39,6 +39,7 @@ function App() {
   const [todoList, setTodoList] = useState(TODOS_MOCK);
   const [isOpen, setIsOpen] = useState(false);
   const [todoId, setTodoId] = useState(null);
+  const [validForm, setValidForm] = useState(false);
   const formEl = useRef(null);
 
   const handleUpsertTodo = (e) => {
@@ -65,6 +66,16 @@ function App() {
             },
           ]
     );
+
+    if (
+      !e.target.elements.title.value ||
+      !e.target.elements.description.value
+    ) {
+      /* setTodoList(); */
+      setIsOpen(true);
+      setValidForm(true);
+    }
+
     setIsOpen(false);
     e.target.reset();
   };
@@ -126,9 +137,11 @@ function App() {
           */}
         <Modal isOpen={isOpen} onClose={handleOnClose}>
           <h2>{modalModeLabel}Todo</h2>
-          <form ref={formEl} onSubmit={handleUpsertTodo}>
-            <Input name="title" placeholder="Title" type="text" required />
-            <TextArea name="description" placeholder="Description" required />
+          <form name="myForm" ref={formEl} onSubmit={handleUpsertTodo}>
+            {validForm ? <label>The title is required!</label> : ""}
+            <Input name="title" placeholder="Title" type="text" />
+            {validForm ? <label>The description is required!</label> : ""}
+            <TextArea name="description" placeholder="Description" />
             <Button type="submit">{modalModeLabel}</Button>
           </form>
         </Modal>
